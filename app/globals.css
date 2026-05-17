@@ -1,26 +1,48 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ============================================================================
+   Design tokens do Instituto Estrelar
+   ============================================================================ */
+@theme {
+  /* Paleta oficial do Estrelar */
+  --color-azul: #2E3192;
+  --color-azul-dark: #1F2270;
+  --color-azul-soft: #4346B0;
+
+  --color-turquesa: #77DAD5;
+  --color-turquesa-soft: #A8E8E4;
+
+  --color-amarelo: #FFE877;
+  --color-amarelo-soft: #FFF1B0;
+
+  --color-coral: #F96E6E;
+  --color-coral-dark: #E25A5A;
+
+  --color-offwhite: #E4DCDD;
+  --color-offwhite-2: #EFE9E9;
+
+  --color-texto: #1A1A1A;
+  --color-texto-medio: #4A4A4A;
+  --color-borda: #D4CCCD;
+
+  /* Tipografia */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ============================================================================
+   Base
+   ============================================================================ */
+html, body {
+  background: var(--color-offwhite);
+  color: var(--color-texto);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Foco visível para acessibilidade (todos os interativos) */
+*:focus-visible {
+  outline: 2px solid var(--color-azul);
+  outline-offset: 2px;
 }
