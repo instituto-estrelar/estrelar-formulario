@@ -29,6 +29,7 @@ import {
 import { MultiSelect, MultiSelectOption } from "./MultiSelect";
 import { Banner } from "./Banner";
 import { SuccessScreen } from "./SuccessScreen";
+import { MUNICIPIOS_ES, OPCAO_OUTRA_CIDADE } from "@/lib/cidades-es";
 
 interface Props {
   areas: AreaAtuacao[];
@@ -52,6 +53,12 @@ const OPCOES_TURNOS: MultiSelectOption[] = [
   { value: "noite", label: "Noite" },
 ];
 
+// Opções de cidades onde mora: 78 municipios do ES + "Outra cidade"
+const OPCOES_CIDADES_MORADIA: MultiSelectOption[] = [
+  ...MUNICIPIOS_ES.map((nome) => ({ value: nome, label: nome })),
+  { value: OPCAO_OUTRA_CIDADE, label: OPCAO_OUTRA_CIDADE },
+];
+
 // Chave do localStorage pro rascunho
 const LS_KEY = "estrelar-rascunho-voluntario-v1";
 
@@ -63,6 +70,7 @@ const ESTADO_INICIAL = {
   telefone: "",
   data_nascimento: "",
   cidade_residencia: "",
+  cidade_residencia_outra: "",
   motivo: "",
   utilidade: "",
   habilidades: "",
@@ -170,14 +178,27 @@ export function FormularioVoluntario({ areas, cidades }: Props) {
     const rNasc = validarNascimento(form.data_nascimento);
     if (!rNasc.ok) novosErros.data_nascimento = rNasc.msg!;
 
-    const rCidRes = validarTextoMinimo(form.cidade_residencia, 2, "Cidade");
-    if (!rCidRes.ok) novosErros.cidade_residencia = rCidRes.msg!;
+    if (!form.cidade_residencia) {
+      novosErros.cidade_residencia = "Selecione sua cidade.";
+    } else if (form.cidade_residencia === OPCAO_OUTRA_CIDADE) {
+      const rOutra = validarTextoMinimo(
+        form.cidade_residencia_outra,
+        2,
+        "Cidade"
+      );
+      if (!rOutra.ok) {
+        novosErros.cidade_residencia_outra = rOutra.msg!;
+      }
+    }
 
     const rMotivo = validarTextoMinimo(form.motivo, 10, "Motivo");
     if (!rMotivo.ok) novosErros.motivo = rMotivo.msg!;
 
-    const rUtil = validarTextoMinimo(form.utilidade, 10, "Descrição");
-    if (!rUtil.ok) novosErros.utilidade = rUtil.msg!;
+    // utilidade é opcional; se preenchida, valida tamanho mínimo
+    if (form.utilidade.trim().length > 0) {
+      const rUtil = validarTextoMinimo(form.utilidade, 3, "Descrição");
+      if (!rUtil.ok) novosErros.utilidade = rUtil.msg!;
+    }
 
     const rAreas = validarSelecaoMinima(form.areas, "Áreas");
     if (!rAreas.ok) novosErros.areas = rAreas.msg!;
@@ -226,9 +247,13 @@ export function FormularioVoluntario({ areas, cidades }: Props) {
       email: form.email.trim(),
       telefone: form.telefone,
       data_nascimento: form.data_nascimento,
-      cidade_residencia: form.cidade_residencia.trim(),
+      cidade_residencia:
+        form.cidade_residencia === OPCAO_OUTRA_CIDADE
+          ? form.cidade_residencia_outra.trim()
+          : form.cidade_residencia,
       motivo_voluntariado: form.motivo.trim(),
-      descricao_utilidade: form.utilidade.trim(),
+      // utilidade é opcional — manda undefined se vazio pra Edge Function tratar como ausente
+      descricao_utilidade: form.utilidade.trim() || undefined,
       habilidades_livres: form.habilidades.trim() || undefined,
       area_outro_descricao:
         mostrarOutro && form.areaOutro.trim()
@@ -412,23 +437,57 @@ export function FormularioVoluntario({ areas, cidades }: Props) {
         />
       </FormField>
 
-      {/* Cidade onde mora */}
+      {/* Cidade onde mora — dropdown com municipios do ES */}
       <FormField
         label="Qual cidade você mora?"
         required
         error={erros.cidade_residencia}
       >
-        <input
-          type="text"
+        <select
           value={form.cidade_residencia}
-          onChange={(e) => atualizar("cidade_residencia", e.target.value)}
-          placeholder="Cidade — Estado"
-          className={
-            erros.cidade_residencia ? inputErrorClass : inputClass
-          }
-          autoComplete="address-level2"
-        />
+          onChange={(e) => {
+            atualizar("cidade_residencia", e.target.value);
+            // Limpa o campo "outra" se trocar pra uma cidade da lista
+            if (e.target.value !== OPCAO_OUTRA_CIDADE) {
+              atualizar("cidade_residencia_outra", "");
+            }
+          }}
+          className={erros.cidade_residencia ? inputErrorClass : inputClass}
+        >
+          <option value="">Selecione sua cidade...</option>
+          {MUNICIPIOS_ES.map((cidade) => (
+            <option key={cidade} value={cidade}>
+              {cidade}
+            </option>
+          ))}
+          <option value={OPCAO_OUTRA_CIDADE}>
+            {OPCAO_OUTRA_CIDADE}
+          </option>
+        </select>
       </FormField>
+
+      {/* Campo de texto livre que aparece só se selecionar "Outra cidade" */}
+      {form.cidade_residencia === OPCAO_OUTRA_CIDADE && (
+        <FormField
+          label="Em qual cidade você mora?"
+          required
+          hint="Digite o nome completo da cidade e estado (ex: Rio de Janeiro — RJ)"
+          error={erros.cidade_residencia_outra}
+        >
+          <input
+            type="text"
+            value={form.cidade_residencia_outra}
+            onChange={(e) =>
+              atualizar("cidade_residencia_outra", e.target.value)
+            }
+            placeholder="Cidade — Estado"
+            className={
+              erros.cidade_residencia_outra ? inputErrorClass : inputClass
+            }
+            autoComplete="address-level2"
+          />
+        </FormField>
+      )}
 
       {/* Motivo */}
       <FormField
@@ -447,25 +506,12 @@ export function FormularioVoluntario({ areas, cidades }: Props) {
         />
       </FormField>
 
-      {/* Utilidade */}
+      {/* Áreas de atuação — vem PRIMEIRO agora (era depois do textarea de utilidade) */}
       <FormField
         label="Em que área e como você acha que poderia ser útil?"
         required
-        error={erros.utilidade}
+        error={erros.areas}
       >
-        <textarea
-          value={form.utilidade}
-          onChange={(e) => atualizar("utilidade", e.target.value)}
-          placeholder="Conta um pouco sobre você e como pode contribuir."
-          rows={3}
-          className={`${
-            erros.utilidade ? inputErrorClass : inputClass
-          } resize-none`}
-        />
-      </FormField>
-
-      {/* Áreas de atuação */}
-      <FormField label="Áreas que combinam com você" required error={erros.areas}>
         <MultiSelect
           options={opcoesAreas}
           selected={form.areas}
@@ -491,6 +537,23 @@ export function FormularioVoluntario({ areas, cidades }: Props) {
           />
         </FormField>
       )}
+
+      {/* Descrição opcional sobre subnicho — agora vem DEPOIS das áreas, opcional, curto */}
+      <FormField
+        label="Descreva brevemente o que espera atuando nessa área"
+        hint="Opcional, mas ajuda muito! Ex.: dentro de 'mídia', você prefere fotografia? Em 'dar aula', tem alguma matéria favorita?"
+        error={erros.utilidade}
+      >
+        <textarea
+          value={form.utilidade}
+          onChange={(e) => atualizar("utilidade", e.target.value)}
+          placeholder="Pode ser bem curtinho..."
+          rows={2}
+          className={`${
+            erros.utilidade ? inputErrorClass : inputClass
+          } resize-none`}
+        />
+      </FormField>
 
       {/* Dias */}
       <FormField
@@ -540,7 +603,7 @@ export function FormularioVoluntario({ areas, cidades }: Props) {
       {/* Habilidades livres (opcional) */}
       <FormField
         label="Tem alguma habilidade que não citamos aqui?"
-        hint="Pode contar tudo — mais à frente nossa IA ajuda a organizar."
+        hint="Pode contar tudo — quanto mais soubermos sobre você, melhor."
       >
         <textarea
           value={form.habilidades}

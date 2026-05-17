@@ -38,7 +38,7 @@ export interface PayloadCadastro {
   data_nascimento: string;
   cidade_residencia: string;
   motivo_voluntariado: string;
-  descricao_utilidade: string;
+  descricao_utilidade?: string;
   habilidades_livres?: string;
   area_outro_descricao?: string;
   area_ids: string[];
