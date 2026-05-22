@@ -44,7 +44,6 @@ const OPCOES_DIAS: MultiSelectOption[] = [
   { value: "quinta", label: "Quinta-feira" },
   { value: "sexta", label: "Sexta-feira" },
   { value: "sabado", label: "Sábado" },
-  { value: "domingo", label: "Domingo" },
 ];
 
 const OPCOES_TURNOS: MultiSelectOption[] = [
@@ -323,6 +322,7 @@ export function FormularioVoluntario({ areas, cidades }: Props) {
   const opcoesAreas: MultiSelectOption[] = areas.map((a) => ({
     value: a.id,
     label: a.nome,
+    description: a.descricao || undefined,
   }));
 
   const opcoesCidades: MultiSelectOption[] = cidades.map((c) => ({
@@ -541,7 +541,7 @@ export function FormularioVoluntario({ areas, cidades }: Props) {
       {/* Descrição opcional sobre subnicho — agora vem DEPOIS das áreas, opcional, curto */}
       <FormField
         label="Descreva brevemente o que espera atuando nessa área"
-        hint="Opcional, mas ajuda muito! Ex.: dentro de 'mídia', você prefere fotografia? Em 'dar aula', tem alguma matéria favorita?"
+        hint="Opcional, mas ajuda muito! Ex.: dentro de 'Comunicação', você prefere fotografia? Em 'dar aula', tem alguma matéria favorita?"
         error={erros.utilidade}
       >
         <textarea

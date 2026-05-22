@@ -3,8 +3,9 @@
 import { useState, useRef, useEffect } from "react";
 
 export interface MultiSelectOption {
-  value: string;  // o valor real (ex: "segunda" ou um UUID)
-  label: string;  // o que aparece na tela (ex: "Segunda-feira")
+  value: string;        // o valor real (ex: "segunda" ou um UUID)
+  label: string;        // o que aparece na tela (ex: "Segunda-feira")
+  description?: string; // descrição que aparece só no painel aberto, não no chip
 }
 
 interface MultiSelectProps {
@@ -169,7 +170,7 @@ export function MultiSelect({
                 aria-selected={isSelected}
                 onClick={() => toggleOption(opt.value)}
                 className={`
-                  w-full px-4 py-3 text-left flex items-center gap-3
+                  w-full px-4 py-3 text-left flex items-start gap-3
                   transition-colors
                   ${
                     isSelected
@@ -180,7 +181,7 @@ export function MultiSelect({
               >
                 <span
                   className={`
-                    w-5 h-5 rounded-md border-2 flex-shrink-0
+                    w-5 h-5 rounded-md border-2 flex-shrink-0 mt-0.5
                     flex items-center justify-center transition-all
                     ${
                       isSelected
@@ -203,7 +204,14 @@ export function MultiSelect({
                     </svg>
                   )}
                 </span>
-                <span>{opt.label}</span>
+                <span className="flex-1 min-w-0">
+                  <span className="block">{opt.label}</span>
+                  {opt.description && (
+                    <span className="block text-xs text-texto-medio mt-0.5 font-normal leading-snug">
+                      {opt.description}
+                    </span>
+                  )}
+                </span>
               </button>
             );
           })}
