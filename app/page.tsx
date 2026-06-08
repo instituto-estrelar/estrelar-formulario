@@ -2,8 +2,8 @@ import Image from "next/image";
 import { getDadosBase } from "@/lib/areas-cidades";
 import { FormularioVoluntario } from "@/components/FormularioVoluntario";
 
-// ISR: revalida a cada 60 segundos
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function Home() {
   const { areas, cidades } = await getDadosBase();
